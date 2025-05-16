@@ -1,0 +1,29 @@
+# .github/workflows/latex.yml
+name: LaTeX PDF Builder
+
+on:
+  push:
+    paths:
+      - 'papers/**.tex'
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install TeX
+        run: sudo apt-get update && sudo apt-get install -y texlive-full
+
+      - name: Run PDF Builder
+        run: |
+          chmod +x scripts/build-updated-pdfs.sh
+          ./scripts/build-updated-pdfs.sh ${{ github.event.before }} ${{ github.sha }}
+
+      - name: Commit PDFs
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add papers/**/*.pdf
+          git commit -m "Updated PDFs" || echo "No changes to commit"
+          git push
